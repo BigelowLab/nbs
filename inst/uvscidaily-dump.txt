@@ -1,0 +1,162 @@
+File https://www.star.nesdis.noaa.gov/thredds/dodsC/CoastWatch/NCEI/Blended/uvcomp/SCIDailyGlobal/WW00/LoM (NC_FORMAT_CLASSIC):
+
+     5 variables (excluding dimension variables):
+        double crs[]   
+            semi_major_axis: 6378137
+            inverse_flattening: 298.257223563
+            grid_mapping_name: latitude_longitude
+            epsg_code: EPSG:4326
+        int mask[lon,lat,zlev,time]   
+            _FillValue: -9999
+            long_name: Blended Wind land/ocean/lake/river mask
+            coverage_content_type: auxiliaryInformation
+            coordinates: lon lat
+            mask_values: 0=land, 1=ocean, 2=lake, 3=river, 6=model
+            _ChunkSizes: 1
+             _ChunkSizes: 1
+             _ChunkSizes: 719
+             _ChunkSizes: 1440
+        float u_wind[lon,lat,zlev,time]   
+            _FillValue: -9999
+            coverage_content_type: physicalMeasurement
+            height: 10 m
+            units: m s-1
+            long_name: zonal wind component
+            standard_name: eastward_wind
+            scale_factor: 1
+            add_offset: 0
+            coordinates: time lat lon zlev
+            grid_mapping: crs
+            _ChunkSizes: 1
+             _ChunkSizes: 1
+             _ChunkSizes: 719
+             _ChunkSizes: 1440
+        float v_wind[lon,lat,zlev,time]   
+            _FillValue: -9999
+            coverage_content_type: physicalMeasurement
+            height: 10 m
+            units: m s-1
+            long_name: meridional wind component
+            standard_name: northward_wind
+            scale_factor: 1
+            add_offset: 0
+            coordinates: time lat lon zlev
+            grid_mapping: crs
+            _ChunkSizes: 1
+             _ChunkSizes: 1
+             _ChunkSizes: 719
+             _ChunkSizes: 1440
+        float windspeed[lon,lat,zlev,time]   
+            _FillValue: -9999
+            coverage_content_type: physicalMeasurement
+            height: 10 m
+            units: m s-1
+            long_name: magnitude of the wind velocity
+            standard_name: wind_speed
+            scale_factor: 1
+            add_offset: 0
+            coordinates: time lat lon zlev
+            grid_mapping: crs
+            _ChunkSizes: 1
+             _ChunkSizes: 1
+             _ChunkSizes: 719
+             _ChunkSizes: 1440
+
+     4 dimensions:
+        lat  Size:719 
+            standard_name: latitude
+            long_name: latitude
+            grids: uniform grids from -89.75 to 89.75 by 0.25
+            units: degrees_north
+            axis: Y
+            valid_min: -89.75
+            valid_max: 89.75
+            coverage_content_type: coordinate
+            _ChunkSizes: 719
+        lon  Size:1440 
+            standard_name: longitude
+            long_name: longitude
+            units: degrees_east
+            grids: uniform grids from 0.00 to 359.75 by 0.25
+            axis: X
+            valid_min: 0
+            valid_max: 359.75
+            coverage_content_type: coordinate
+            _ChunkSizes: 1440
+        time  Size:13132 
+            standard_name: time
+            long_name: Center Time of the Data
+            units: hours since 1978-01-01
+            axis: T
+            coverage_content_type: coordinate
+            calendar: gregorian
+            _ChunkSizes: 1
+        zlev  Size:1 
+            standard_name: altitude
+            positive: up
+            long_name: height above sea level
+            units: meters
+            axis: Z
+            valid_max: 10
+            coverage_content_type: coordinate
+            _ChunkSizes: 1
+
+    58 global attributes:
+        Conventions: CF-1.7, ACDD-1.3
+        title: NOAA/NCEI Blended daily averaged 0.25-degree Sea Surface Wind Version 2.0
+        summary: This netCDF file  contains 0.25-degree globally gridded daily mean ocean surface vector winds created by the NOAA National Centers for Environmental Information (NCEI).The dataset covers from July 1987 to present with quasi-daily updates. 6-hourly and averaged monthly data are also available. Details can be found at https://www.ncdc.noaa.gov/data-access/marineocean-data/blended-global/blended-sea-winds
+        references: https://www.ncdc.noaa.gov/data-access/marineocean-data/blended-global/blended-sea-winds and Zhang, H.-M., J. J. Bates, and R. W. Reynolds, 2006: Assessment of composite global sampling: Sea surface wind speed, Geophysical Research Letters, 33, L17714, http://dx.doi.org/10.1029/2006GL027086
+        institution: NOAA/NCEI
+        license: These data are publically available for use with citation of this data source.
+        id: uv_daily20230629
+        product_version: V2.0
+        ncei_template_version: NCEI_NetCDF_Grid_Template_v2.0
+        netcdf_version_id: 4.6.3
+        keywords: sea winds, ocean winds, sea surface winds, air-sea interaction, air-sea flux, wind-driven circulation, Ekman pumping, Ekman transport, ocean upwelling, wind stress, windstress
+        keywords_vocabulary: NASA Global Change Master Directory (GCMD) Science Keywords version 10.2
+        creator_name: NCEI
+        creator_email: ncei.seawinds@noaa.gov
+        creator_type: institution
+        creator_institution: US DOC; NOAA; National Environmental Satellite Data and Information Service; National Centers for Environmental Information
+        geospatial_bounds: POLYGON ((0 -89.75, 0 89.75, 359.75 89.75, 359.75 -89.75, 0 -89.75))
+        geospatial_bounds_crs: EPSG:4326
+        geospatial_lat_min: -89.75
+        geospatial_lat_max: 89.75
+        geospatial_lon_min: 0
+        geospatial_lon_max: 359.75
+        geospatial_lat_resolution: 0.25
+        geospatial_lat_units: degrees_north
+        geospatial_lon_resolution: 0.25
+        geospatial_lon_units: degrees_east
+        time_coverage_duration: P1D
+        geospatial_vertical_units: meters
+        geospatial_vertical_positive: up
+        uuid: 11c882ff-c93c-4409-845f-53331313b440
+        project: NOAA/NCEI Satellite Oceanography Product Area - Blended Sea Winds
+        naming_authority: gov.noaa.ncei
+        publisher_name: NOAA National Centers for Environmental Information
+        publisher_email: ncei.info@noaa.gov, ncei.seawinds@noaa.gov
+        publisher_url: https://www.ncei.noaa.gov/
+        publisher_type: institution
+        publisher_institution: NOAA National Centers for Environmental Information
+        program: NOAA/NCEI Satellite Oceanography Product Area
+        source: Multiple satellite observations: DMSP SSMI F08, F10, F11, F13, F14 F15, F16, F17; TMI; QuikSCAT; AMSR-E; AMSR2; ASCAT; GMI; WINDSAT; SMAP L-BAND RADAR; Direction from ERA5 Reanalysis
+        platform: DMSP 5D-2/F8,DMSP 5D-2/F10,DMSP 5D-2/F11,DMSP 5D-2/F13,DMSP 5D-2/F14,DMSP 5D-3/F15, DMSP 5D-3/F16, DMSP 5D-3/F17, TRMM, QUIKSCAT, AQUA, GCOM-W1, METOP-A, METOP-B, GPM, CORIOLIS, SMAP
+        platform_vocabulary: NASA Global Change Master Directory (GCMD) Platform Keywords version 10.2
+        instrument: SSM/I, TMI, SEAWINDS, AMSR-E, AMSR2, ASCAT, GMI, WINDSAT, SMAP L-BAND RADAR
+        instrument_vocabulary: NASA Global Change Master Directory (GCMD) Platform Keywords version 10.2
+        standard_name_vocabulary: Climate and Forecast (CF) Standard Name Table (Version 77, 19 January 2021)
+        processing_level: NOAA L4
+        time_coverage_resolution: P1D
+        time_coverage_start: 2023-06-28T21:00:00Z
+        time_coverage_end: 2023-06-29T21:00:00Z
+        contributor_name: Korak Saha, Huai-min Zhang
+        contributor_role: PI
+        history: Simple spatiotemporally weighted Interpolation (SI), V.1.2. Version 1.2 uses updated satellite retrievals by Remote Sensing System, released in September 2006: SSMI V06, TMI V04, QSCAT V03a. AMSRE V05 was also updated using the new SSMI rain rate. V2.0 uses updated retrievals by Remote Sensing System, released in 2017: SSMI V07, TMI V07.1, QSCAT V04, AMSRE V07 and AMSR2 v08.2 released in 2021.
+        acknowledgement: The gridded data were generated from the multiple satellite observations of DOD, NOAA and NASA (and future others) and wind retrievals of the Remote Sensing Systems, Inc. (http://www.remss.com), using scientific methods such as objective analysis (OA). The OA is only truly objective when the needed statistics are completely known, which may not always be the case. The ERA-5 wind directions and stresses were downloaded from the Copernicus Climate Change Service (C3S) Climate Data Store
+        creator_url: https://www.ncei.noaa.gov/products/blended-sea-winds
+        cdm_data_type: Grid
+        comment: Global Blended 10m Neutral Sea Surface Winds
+        date_created: 2023-07-10T12:59:50Z
+        date_modified: 2023-07-10T12:59:50Z
+        date_metadata_modified: 2023-07-10T12:59:50Z
