@@ -1,73 +1,67 @@
-#' Convert bounding box [0,360] longitudes to [-180, 180]
+#' Convert bounding box (0,360) longitudes to (-180, 180)
 #'
-#' Bounding boxes are 4 element vectors of [left, right, bottom, top]
+#' @description Bounding boxes are 4 element vectors of (xmin, ymin, xmax, ymax)
 #'
 #' @export
+#' @rdname bb_to180
 #' @param x numeric bounding box vector, no check is done for being withing -180, 180 range
-#' @return numeric bounding box vector
+#' @return `bb_to180` returns a numeric bounding box vector
 bb_to180 <- function(x) {
-  ix = seq_len(2)  
+  ix = c(1,3) 
   x[ix] <- to180(x[ix])
   if (identical(x[ix[1]], 180)) x[ix[1]] <- -180  # western edge
   if (identical(x[ix[2]], -180)) x[ix[2]] <- 180  # eastern edge
   x
 }
 
-#' Convert [-180,180] bounding box longitudes to [0,360]
-#'
-#' Bounding boxes are 4 element vectors of [left, right, bottom, top]
-#'
+#' @rdname bb_to180
 #' @export
 #' @param x numeric bounding box vector, no check is done for being withing 0,360 range
-#' @return numeric bounding box vector
+#' @return `bb_to360` returns a numeric bounding box vector
 bb_to360 <- function(x) {
-  ix <- seq_len(2)
+  ix <- c(1,3)
   x[ix] <- to360(x[ix])
   if (identical(x[ix[1]], 360)) x[ix[1]] <- 0   # western edge
   if (identical(x[ix[2]], 0)) x[ix[2]] <- 360   # eastern edge
   x
 }
 
-#' Convert [0,360] longitudes to [-180, 180]
-#'
+#' @rdname bb_to180
 #' @export
 #' @param x numeric vector, no check is done for being withing -180, 180 range
-#' @return numeric vector
+#' @return `to180` returns a numeric vector
 to180 <- function(x) {ix <- x > 180 ; x[ix] <- x[ix] - 360; x}
 
-#' Convert [-180,180] longitudes to [0,360]
-#'
+#' @rdname bb_to180
 #' @export
 #' @param x numeric vector, no check is done for being withing 0,360 range
-#' @return numeric vector
+#' @return `to360` returns a numeric vector
 to360 <- function(x) {ix <- x < 0 ; x[ix] <- x[ix] + 360; x}
 
 
-#' Convert a 4-element bbox vector to a sf bbox object
-#'
+#' @rdname bb_to180
 #' @export
-#' @param bb a 4-element numeric vector of [left, right, bottom, top] coordinates
+#' @param bb a 4-element numeric vector of (xmin, ymin, xmax, ymax) coordinates
 #' @param crs character/numeric, the coordinate reference system
-#' @return sf bbox object
-bb_to_bbox <- function(bb = c(-72, -63, 39, 46),
+#' @return bb_to_bbox returns a sf bbox object
+bb_to_bbox <- function(bb = c(-72, 39, -63, 46),
                        crs = 4326){
   
-  sf::st_bbox(c(xmin = bb[1], xmax = bb[2], ymin = bb[3], ymax = bb[4]),
+  sf::st_bbox(c(xmin = bb[1], xmax = bb[3], ymin = bb[2], ymax = bb[4]),
               crs = crs)
 }
 
 
-#' Split a bounding box into two at \code{at}
-#'
+#' @rdname bb_to180
 #' @export
-#' @param bb numeric, 4 element bounding box of [left, right, bottom, top] coordinates
+#' @param bb numeric, 4 element bounding box of (xmin, ymin, xmax, ymax) coordinates
 #' @param at numeric, longitude to split around
-#' @return list of one or two bounding box vectors
-bb_split <- function(bb = c(-170, 50, -60, 60),
+#' @return `bb_split` returns a list of one or two bounding box vectors
+bb_split <- function(bb = c(-170, -60, 50,  60),
                      at = 0){
   if (bb_straddles(bb, at = at)){
     x <- list(
-      bb1 = c(bb[1], at, bb[c(3,4)]),
+      bb1 = c(bb[1], bb[2], at, bb[4]),
       bb2 = c(at, bb[c(2,3,4)]))
   } else {
     x <- list(bb1 = bb)
@@ -75,21 +69,20 @@ bb_split <- function(bb = c(-170, 50, -60, 60),
   x
 }
 
-#' Test if a bounding box straddles a longitude
-#'
+#' @rdname bb_to180
 #' @export
-#' @param bb numeric, 4 element bounding box of [left, right, bottom, top] coordinates
+#' @param bb numeric, 4 element bounding box of (xmin, ymin, xmax, ymax) coordinates
 #' @param at numeric, longitude to test straddle-ness
-#' @return logical
-bb_straddles <- function(bb = c(-170, 50, -60, 60),
-                         at = 0){
-  bb[1] < at && bb[2] > at
+#' @return `bb_staddles` returns a logical
+bb_straddles <- function(bb = c(-170, -60, 50, 60), at = 0){ 
+  bb[1] < at && bb[3] > at
 }
 
 
 
-#' Translate a stars from [0,360] to [-180, 180] 
-#' 
+#' Translate a stars from (0,360) to (-180, 180) 
+#'
+#' @rdname bb_to180
 #' @export
 #' @param x stars object
 #' @return a spatially ranslated version of the input \code{x}
@@ -108,8 +101,9 @@ stars_to180 <- function(x){
 }
 
 
-#' Translate a stars from [-180, 180] to [0,360] 
+#' Translate a stars from (-180, 180) to (0,360) 
 #' 
+#' @rdname bb_to180
 #' @export
 #' @param x stars object
 #' @return a spatially ranslated version of the input \code{x}

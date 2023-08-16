@@ -2,16 +2,62 @@
 % Please edit documentation in R/bb.R
 \name{bb_to180}
 \alias{bb_to180}
-\title{Convert bounding box \link{0,360} longitudes to \link{-180, 180}}
+\alias{bb_to360}
+\alias{to180}
+\alias{to360}
+\alias{bb_to_bbox}
+\alias{bb_split}
+\alias{bb_straddles}
+\alias{stars_to180}
+\alias{stars_to360}
+\title{Convert bounding box (0,360) longitudes to (-180, 180)}
 \usage{
 bb_to180(x)
+
+bb_to360(x)
+
+to180(x)
+
+to360(x)
+
+bb_to_bbox(bb = c(-72, 39, -63, 46), crs = 4326)
+
+bb_split(bb = c(-170, -60, 50, 60), at = 0)
+
+bb_straddles(bb = c(-170, -60, 50, 60), at = 0)
+
+stars_to180(x)
+
+stars_to360(x)
 }
 \arguments{
-\item{x}{numeric bounding box vector, no check is done for being withing -180, 180 range}
+\item{x}{stars object}
+
+\item{bb}{numeric, 4 element bounding box of (xmin, ymin, xmax, ymax) coordinates}
+
+\item{crs}{character/numeric, the coordinate reference system}
+
+\item{at}{numeric, longitude to test straddle-ness}
 }
 \value{
-numeric bounding box vector
+\code{bb_to180} returns a numeric bounding box vector
+
+\code{bb_to360} returns a numeric bounding box vector
+
+\code{to180} returns a numeric vector
+
+\code{to360} returns a numeric vector
+
+bb_to_bbox returns a sf bbox object
+
+\code{bb_split} returns a list of one or two bounding box vectors
+
+\code{bb_staddles} returns a logical
+
+a spatially ranslated version of the input \code{x}
+
+a spatially ranslated version of the input \code{x}
 }
 \description{
-Bounding boxes are 4 element vectors of \link{left, right, bottom, top}
+Bounding boxes are 4 element vectors of (xmin, ymin, xmax, ymax)
 }

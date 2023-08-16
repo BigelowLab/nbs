@@ -10,7 +10,7 @@ nbs_res(X)
 \item{X}{ncdf4 object}
 }
 \value{
-2 element \link{lon, lat} resolution vector
+2 element (lon, lat) resolution vector
 }
 \description{
 Retrieve the spatial resolution stated in the global metadata

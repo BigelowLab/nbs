@@ -22,15 +22,15 @@ nbs_tcount(x)
 \item{x}{ncdf4 object}
 }
 \value{
-character time unit (days or hours)
+nbs_time_units returns a character time unit (days or hours)
 
-Date or POSIXct start
+nbs_epoch returns a single Date or POSIXct starting point from which time is figured
 
-Date or POSIXct vector
+nbs_time returns a Date or POSIXct vector
 
-Date or POSIXct start and stop values
+nbs_trange returns a 2-element vector of Date or POSIXct start and stop values
 
-the number of time steps
+nbs_tcount returns the number of time steps
 }
 \description{
 Time may be in days or hours since a common epoch (1978-01-01). \code{nms_time_unit()}
