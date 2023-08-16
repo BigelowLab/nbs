@@ -62,9 +62,9 @@ tail(times)
 
 #### Extracting with bounding boxes
 
-The grid is a regular WGS84 `longlat` grid, but you should note that the longitudes range from (0, 360) (and not (-180, 180)).
+The grid is a regular WGS84 `longlat` grid, but you should note that the longitudes range from (0, 360) and not (-180, 180).
 
-You can either manually specify a bound box in (xmin, ymin, xmax, ymax) order,, or provide an `sf`-slike object from whihc the bounding box is extracted. Below we extract 12 months (from 2020), bind as one stars object and display.
+You can either manually specify a bound box in (xmin, ymin, xmax, ymax) order, or provide an `sf-like` object from which the bounding box is extracted. Below we extract 12 months (from 2020), bind as one stars object and display.
 
 ```{r}
 bb = c(290, -60, 360, 10)
