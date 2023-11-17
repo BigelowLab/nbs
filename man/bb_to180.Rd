@@ -20,7 +20,10 @@ to180(x)
 
 to360(x)
 
-bb_to_bbox(bb = c(-72, 39, -63, 46), crs = 4326)
+bb_to_bbox(
+  bb = c(xmin = 288, ymin = 39, xmax = 297, ymax = 46),
+  crs = nbs_crs()
+)
 
 bb_split(bb = c(-170, -60, 50, 60), at = 0)
 

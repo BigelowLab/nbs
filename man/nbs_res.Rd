@@ -4,10 +4,10 @@
 \alias{nbs_res}
 \title{Retrieve the spatial resolution stated in the global metadata}
 \usage{
-nbs_res(X)
+nbs_res(x)
 }
 \arguments{
-\item{X}{ncdf4 object}
+\item{x}{ncdf4 object}
 }
 \value{
 2 element (lon, lat) resolution vector

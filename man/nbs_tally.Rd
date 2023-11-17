@@ -7,7 +7,7 @@
 nbs_tally()
 }
 \value{
-a tibble of summary information
+character vector of catalog names
 }
 \description{
 Provides a brief tally/overview of available data

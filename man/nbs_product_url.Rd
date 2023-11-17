@@ -7,7 +7,7 @@
 nbs_product_url(
   product = c("uvcomp_SCISixHourGlobal", "stress_SCISixHourGlobal",
     "uvcomp_SCIDailyGlobal", "stress_SCIDailyGlobal", "uvcomp_SCIMonthlyGlobal",
-    "stress_SCIMonthlyGlobal", "uvcomp_NRTSixHourGlobal", "stress_NRTSixHourGlobal")[1],
+    "stress_SCIMonthlyGlobal", "uvcomp_NRTSixHourGlobal", "stress_NRTSixHourGlobal"),
   root = nbs_base_url()
 )
 }

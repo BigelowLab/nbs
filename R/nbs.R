@@ -1,41 +1,39 @@
+#' Retrieve nbs variables
+#' 
+#' @export
+#' @param x ncdf4 object
+#' @param drop character items to not list as variables.  Set to 'none' to drop none.
+#' @return character vector
+nbs_vars <- function(x, drop = c("time_run", "time_offset", "crs", "mask", "latitude",
+                                 "longitude", "zlev")){
+  if (inherits(x, "ncdf4")){
+    x <- names(x$var)
+  } else {
+    # this is a union of wind and stress, so a jumble
+    x <- c("u_wind", "v_wind", "windspeed", "x_tau", "y_tau")
+  }
+  x[!(x %in% drop)]
+}
+
+
+#' Retrieve the assumed CRS
+#' 
+#' @export
+#' @return CRS as character or numeric
+nbs_crs <- function(){
+  return("OGC:CRS84")
+}
+
 #' Provides a brief tally/overview of available data 
 #' 
 #' @export
-#' @return a tibble of summary information
+#' @return character vector of catalog names
 nbs_tally <- function(){
 
-  pp <- nbs_product(x = NULL)
-  xx <- lapply(names(pp), function(p) {
-      x = try(ncdf4::nc_open(nbs_product_url(p)), silent = TRUE)
-      if (inherits(x,"try-error")){
-        warning("unable to open:", p)
-        x = NULL
-      }
-      x
-    }  )
-  names(xx) <- names(pp)
-  ix <- !sapply(xx, is.null)
-  xx = xx[ix]
-  pp = pp[ix]
-  
-  vv <- sapply(xx,
-               function(x){
-                 paste(names(x$var)[-c(1:2)], collapse = ", ")
-               })
-
-  
-  ss = sapply(xx, function(x) nbs_trange(x) |> as.Date())
-  
-  tn <- sapply(xx, nbs_tcount)
-  ok <- lapply(xx, ncdf4::nc_close)
-  
-  
-  dplyr::tibble(name = names(xx), 
-                #longname = names(pp), 
-                vars = vv,
-                time_count = tn,
-                start = ss[1,,drop = TRUE] |> as.Date(origin = as.Date("1970-01-01")),
-                end = ss[1,,drop = TRUE] |> as.Date(origin = as.Date("1970-01-01")))
+  base_uri = nbs_thredds_url()
+  Top = thredds::get_catalog(file.path(base_uri, 
+                                       "thredds/socd/coastwatch/catalog_ncei_global_winds.xml"))
+  names(Top$list_catalogs())
 }
 
 
@@ -80,13 +78,82 @@ nbs_product_url <- function(product = c("uvcomp_SCISixHourGlobal",
                                 "uvcomp_SCIMonthlyGlobal", 
                                 "stress_SCIMonthlyGlobal", 
                                 "uvcomp_NRTSixHourGlobal", 
-                                "stress_NRTSixHourGlobal")[1],
+                                "stress_NRTSixHourGlobal"),
                       root = nbs_base_url()){
   
-  file.path(root, nbs_product(product[1]))             
+  file.path(root, nbs_product(product))             
 }
 
-
+#' Generate a database-let from the the filename of the of a ncdf4 object
+#' 
+#' @export
+#' @param x ncdf4 object
+#' @return tibble database composed of the following fields
+#' \itemize{
+#'   \item{source char the datasetid}
+#'   \item{date} Date
+#'   \item{hour char in %H%M%S (HHMMSS) format} 
+#'   \item{per char period as in one of "sizh", "day", "month"}
+#'   \item{param char, u_wind, windspeed, etc}
+#'   \item{nrt logical TRUE is near real-time}
+#' }
+nbs_generate_database = function(x){
+  # day     uvcompNCEIBlendedGlobalSCIDailyWW00/1987/NBSv02_wind_daily_19870709.nc
+  # sixhour uvcompNCEIBlendedGlobalSCISixHourWW00/1987/NBSv02_wind_6hourly_19870709.nc
+  # monthly uvcompNCEIBlendedGlobalSCIMonthlyWW00/1987/NBSv02_wind_monthly_198707.nc
+  
+  # day     stressNCEIBlendedGlobalSCIDailyWW00/1987/NBSv02_wind_stress_daily_19870709.nc
+  # sixhour stressNCEIBlendedGlobalSCISixHourWW00/1987/NBSv02_wind_stress_6hourly_19870709.nc
+  # monthly stressNCEIBlendedGlobalSCIMonthlyWW00/1987/NBSv02_wind_stress_monthly_198707.nc
+  
+  # Blended/uvcomp/NRTSixHourGlobal/WW00
+  # uvcompNCEIBlendedGlobalNRTSixHourWW00/NBSv02_wind_6hourly_20230101_nrt.nc
+  
+  prod = c(
+    # productname             =  ncdf filename component
+    "uvcomp_SCISixHourGlobal" = "uvcompNCEIBlendedGlobalSCISixHourWW00",  
+    "stress_SCISixHourGlobal" = "stressNCEIBlendedGlobalSCISixHourWW00",
+    "uvcomp_SCIDailyGlobal"   = "uvcompNCEIBlendedGlobalSCIDailyWW00", 
+    "stress_SCIDailyGlobal"   = "stressNCEIBlendedGlobalSCIDailyWW00", 
+    "uvcomp_SCIMonthlyGlobal" = "uvcompNCEIBlendedGlobalSCIMonthlyWW00", 
+    "stress_SCIMonthlyGlobal" = "stressNCEIBlendedGlobalSCIMonthlyWW00", 
+    "uvcomp_NRTSixHourGlobal" = "Blended/uvcomp/NRTSixHourGlobal/WW00", 
+    "stress_NRTSixHourGlobal" = "Blended/stress/NRTSixHourGlobal/WW00",
+    "uvcomp_NRTDailyGlobal"   = "Blended/uvcomp/NRTDailyGlobal/WW00", 
+    "stress_NRTDailyGlobal"   = "Blended/stress/NRTDailyGlobal/WW00"
+    )
+ 
+  ix = sapply(names(prod),
+              function(p) grepl(prod[[p]], x$filename, fixed = TRUE))
+  source = names(prod)[ix]
+  
+  is6h = grepl("SixHour", x$filename, ignore.case = TRUE)
+  isday = grepl("Daily", x$filename, ignore.case = TRUE)
+  ismonth = grepl("Monthly", x$filename, ignore.case = TRUE)
+  isuv = grepl("uvcomp", x$filename, fixed = TRUE)
+  nrt = grepl("NRT", x$filename, fixed = TRUE)
+ 
+  time = nbs_time(x)
+  
+  drop = c("mask", "latitude", "longitude", "lon", "lat", "time", "crs")
+  vars = names(x$var)
+  param = vars[!(vars %in% drop)]
+  
+  per = if(is6h){
+      "sixhour"
+    } else if (isday){
+      "day"
+    } else {
+      "month"
+    }
+  
+ expand.grid(source = source, date = time, 
+              hour = "000000",  param = param, per = per, nrt = nrt,
+             stringsAsFactors = FALSE) |>
+   dplyr::as_tibble() |>
+   dplyr::mutate(hour = format(date, "%H%M%S"),
+                 date = as.Date(as.character(date)))
+}
 
 #' Working with time contents in NBS ncdf4 objects
 #' 
@@ -154,46 +221,91 @@ nbs_tcount = function(x){
 #' Retrieve the spatial resolution stated in the global metadata
 #' 
 #' @export
-#' @param X ncdf4 object
+#' @param x ncdf4 object
 #' @return 2 element (lon, lat) resolution vector
-nbs_res <- function(X){
+nbs_res <- function(x){
   c(0.25, 0.25)
 }
 
-#### functions above
-#### R6 class below
+#' Retrieve a vector of longitudes  
+#' 
+#' @export
+#' @param x ncdf4 object
+#' @return numeric vector  
+nbs_lon = function(x){
+  x$dim$lon$vals
+}
+
+#' Retrieve a vector of latitudes  
+#' 
+#' @export
+#' @param x ncdf4 object
+#' @return numeric vector  
+nbs_lat= function(x){
+  x$dim$lat$vals
+}
+
+
+#' Convert a real time to an index
+#' 
+#' @export
+#' @param x ncdf4 object
+#' @param time numeric index, Date or POSIXct 
+#' @return index
+nbs_which_time = function(x, time = 1){
+  is_real_time = inherits(time, c("Date", "POSIXt"), which = TRUE) |>
+    as.logical() |>
+    any()
+  
+  times = nbs_time(x)
+  if (is_real_time) {
+    time = findInterval(time, times)
+    if (time <= 0)  stop("time must be at or later than:", 
+                       format(times, 
+                              ifelse(inherits(times, "Date"), "%Y-%m-%d", "%Y-%m-%dT%H:%M:%S")))
+  } else {
+    ntimes = length(times)
+    if (time <= 0 || time > (ntimes + 1)) {
+      stop(sprintf("time as index must be greater than 0 and less than %i", ntimes + 1))
+    }
+  }
+  time
+}
+
 
 #' Compute a navigation list given a bounding box
 #' 
 #' @export
-#' @param X NBS2 class object
+#' @param x ncfd4 object
 #' @param bb 4 element vector of (xmin, ymin, xmax, ymax) or an sf-like object
 #'   from which a bbox can be extracted
 #' @param time index, Date or POSIXct single time
 #' @param varid char, the name of the variable to extract
-NBS2_get_nav = function(X, bb = c(288, 297, 39, 46), varid = "u_wind", time = 1){
-  
-  stopifnot(varid %in% names(X$NC$var))
-  
-  is_real_time = inherits(time, c("Date", "POSIXt"), which = TRUE) |>
-    as.logical() |>
-    any()
-  if (is_real_time) time = findInterval(time, X$get_time())
-  if (time <= 0) stop("time must be at or later than:", 
-                      format(X$get_time()[1], "%Y-%m-%d"))
+#' @return navigation list
+nbs_get_nav = function(x, 
+                       bb = c(xmin = 288, ymin = 39, xmax = 297, ymax = 46), 
+                       varid = "u_wind", 
+                       time = 1){
   
   if (inherits(bb, "bbox")) bb = as.vector(bb)
+  if (!all(c("xmin", "xmax", "ymin", "ymax") %in% names(bb))){
+    stop("bb must have named elements: xmin, xmax, ymin and ymax")
+  }
   
-  res = X$get_res()
+  stopifnot(varid %in% names(x$var))
+  
+  time = nbs_which_time(x, time)
+  
+  res = nbs_res(x)
   r2 = res/2
-  lon = X$get_lon()
-  lat = X$get_lat()
+  lon = nbs_lon(x)
+  lat = nbs_lat(x)
   closest_index = function(x, vec){
     which.min(abs(vec-x))
   } 
   
-  xi = c(1,3)
-  yi = c(2,4)
+  xi = c("xmin", "xmax")
+  yi = c("ymin", "ymax")
   ix = unname(sapply(bb[xi] + c(-r2[1], r2[1]), closest_index, lon))
   nx = ix[2] - ix[1] + 1
   xmin = lon[ix[1]] - r2[1]
@@ -217,51 +329,71 @@ NBS2_get_nav = function(X, bb = c(288, 297, 39, 46), varid = "u_wind", time = 1)
   list(
     bb = bb,
     varid = varid,
-    bbox = sf::st_bbox(bbox, crs = 4326),
+    bbox = sf::st_bbox(bbox, crs = nbs_crs()),
     start = c(ix[1], iy[1], 1, time),
     count = c(nx, ny, 1, 1) )
-} # NBS2_get_nav
+} # nbs_get_nav
+
 
 #' Extract an array or stars oject
 #' 
 #' @export
-#' @param X NBS2 class object
+#' @param x ncdf4 object
 #' @param time numeric, Date or POSIXct single time to extract
 #' @param bb 4 element vector of (xmin, ymin, xmax, ymax) or an sf-like object
 #'   from which a bbox can be extracted
-#' @param varid char, the name of the variable to extract
+#' @param varid char, the name of the variable to extract. One or more varid 
+#'   may be specified for a single time.
 #' @param nav NULL or list, if not a list compute the navigation list as needed
 #' @param form char, one of 'array' or 'stars' (default) specifying the output type
+#' @param verbose logical, if TRUE output messages
 #' @return stars or array object
-NBS2_get_var = function(X,
+nbs_get_var = function(x,
                         time = 1, 
-                        bb = c(288, 39, 297, 46), 
+                        bb = c(xmin = 288, ymin = 39, xmax = 297, ymax = 46), 
                         varid = 'u_wind',
                         nav = NULL,
-                        form = c("stars", "array")[1]){
+                        form = c("stars", "array")[1],
+                        verbose = FALSE){
   
   if(FALSE){
     time = 1
-    bbox = c(288, 297, 39, 46)
+    bb = c(xmin = 288, ymin = 39, xmax = 297, ymax = 46)
     varid = 'u_wind'
     nav = NULL
     form = c("stars", "array")[1]
   }
   
-  is_real_time = inherits(time, c("Date", "POSIXt"), which = TRUE) |>
-    as.logical() |>
-    any()
-  if (is_real_time) time = findInterval(time, X$get_time())
-  if (time <= 0) stop("time must be at or later than:", 
-                      format(X$get_time()[1], "%Y-%m-%d"))
+  time = nbs_which_time(x, time)
+  
+  if (length(varid) > 1){
+    ss = lapply(varid,
+        function(v){
+          nbs_get_var(x, time = time, bb = bb, varid = v, nav = nav, form = form)
+        })
+    if (tolower(form[1]) == 'stars'){
+      ss = do.call(c, append(ss, list(along = NA_integer_)))
+    } else{
+      names(ss) = varid
+    }
+    return(ss)
+  }
   
   
-  if (is.null(nav)) nav = NBS2_get_nav(X, bb = bb, varid = varid, time = time)
+  if (is.null(nav)) {
+    nav = nbs_get_nav(x, bb = bb, varid = varid, time = time)
+  } else {
+    nav$start[4] = time[1]
+    nav$varid = varid[1]
+  }
   
-  #nav$start[4] <- time
-  m <- ncdf4::ncvar_get(X$NC, nav$varid,
-                        start = nav$start,
-                        count = nav$count)
+  m <- try(ncdf4::ncvar_get(x, nav$varid,
+                            start = nav$start,
+                            count = nav$count))
+  if (inherits(m, 'try-error')){
+    if (verbose) print(nav)
+    return(NULL)
+  }
   if (tolower(form[1]) == 'array') return(m)
   
   stars::st_as_stars(nav$bbox,
@@ -270,130 +402,6 @@ NBS2_get_var = function(X,
                      ny = nav$count[2]) |>
     rlang::set_names(varid) |>
     stars::st_flip("y")
-} # NBS2_get_var
-
-
-#' R6 class for accessing NBS v2 OpenDAP
-#'
-#' @description R6 class for accessing NBS v2 OpenDAP
-#' @export
-NBS2 = R6::R6Class("NBS2",
-  public = list(
-    #' @field product char, the product name (see [nbs_tally])
-    product = NULL,
-    #' @field base_uri char, the base uri (see [nbs_base_url])
-    base_uri= NULL,
-    #' @field NC ncdf4 object
-    NC = NULL,
-    
-    #' @description
-    #' Create a new NBS2 object.
-    #' @param product char, the product name (see [nbs_tally])
-    #' @param base_uri char, the base uri (see [nbs_base_url])
-    #' @return A new `NBS2` object with an opened ncdf4 object.                 
-    initialize = function(product = "uvcomp_SCIMonthlyGlobal",  
-                          base_uri = nbs_base_url()){
-      self$product = product[1]
-      self$base_uri = base_uri[1]
-      self$open_nc()
-    },  #init
-    
-    #' @description
-    #' Cleanup a NBS2 object
-    finalize = function(){
-        self$close_nc()
-    },
-    
-    #' @description build a URL for the resource
-    build_uri = function(){
-        nbs_product_url(self$product, root = self$base_uri)
-    },
-      
-    #' @description close the ncdf4 object
-    close_nc = function(){
-      if (inherits(self$NC, "ncdf4")) try(ncdf4::nc_close(self$NC))
-      invisible(self)
-    },
-      
-    #' @description open the ncdf4 connection
-    open_nc = function(){
-      uri = self$build_uri()
-      self$NC = try(ncdf4::nc_open(uri))
-      if (inherits(self$NC, "try-error")) stop("error opening NCDF")
-      invisible(self)
-    },
-      
-    #' @description retrieve the spatial resolution
-    #' @return two element numeric vector of (res_x, res_y)
-    get_res = function(){
-      atts = ncdf4::ncatt_get(self$NC, 0)
-      
-      lon = atts[['geospatial_lon_resolution']] |> as.numeric()
-      lat = atts[['geospatial_lat_resolution']] |> as.numeric()
-      
-      c(lon, lat)
-    }, # get_res
-
-    #' @description retrieve a vector of longitudes  
-    #' @return numeric vector  
-    get_lon = function(){
-      self$NC$dim$lon$vals
-    },
-    
-    #' @description retrieve a vector of latitudes  
-    #' @return numeric vector
-    get_lat = function(){
-      self$NC$dim$lat$vals
-    },
-    
-    #' @description retrieve the time origin
-    #' @return Date or POSIXct class element
-    get_epoch = function(){
-      nbs_epoch(self$NC)
-    },
-    
-    #' @description retrieve the time vector
-    #' @return Date or POSIXct class vector 
-    get_time = function(){
-      nbs_time(self$NC)
-    }, # get_time
-    
-    
-    #' @description retrieve a navigation list for extracting rasters
-    #' @param bb 4 element vector of (xmin, ymin, xmax, ymax) or an sf-like object
-    #'   from which a bbox can be extracted
-    #' @param time numeric, Date or POSIXct single time to extract
-    #' @param varid char, the name of the variable to extract
-    get_nav = function(bb = c(288, 297, 39, 46), varid = "u_wind", time = 1){
-      NBS2_get_nav(self, bb = bb, varid = varid, time = time)
-      
-    }, # get_nav
-    
-    #' @description Extract an array or stars oject
-    #' @param time numeric, Date or POSIXct single time to extract
-    #' @param bb 4 element vector of (xmin, ymin, xmax, ymax) or an sf-like object
-    #'   from which a bbox can be extracted
-    #' @param varid char, the name of the variable to extract
-    #' @param nav NULL or list, if not a list compute the navigation list as needed
-    #' @param form char, one of 'array' or 'stars' (default) specifying the output type
-    #' @return stars or array object
-    get_var = function(time = 1, 
-                       bb = c(288, 297, 39, 46), 
-                       varid = 'u_wind',
-                       nav = NULL,
-                       form = c("stars", "array")[1]){
-      NBS2_get_var(self, 
-                   time = time,
-                   bb = bb,
-                   varid = varid,
-                   nav = nav,
-                   form = form)
-    } # get_var
-    
-) # public
-    
-    
-)# NBS2
-
+} # nbs_get_var
 
 

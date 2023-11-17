@@ -44,8 +44,9 @@ to360 <- function(x) {ix <- x < 0 ; x[ix] <- x[ix] + 360; x}
 #' @param bb a 4-element numeric vector of (xmin, ymin, xmax, ymax) coordinates
 #' @param crs character/numeric, the coordinate reference system
 #' @return bb_to_bbox returns a sf bbox object
-bb_to_bbox <- function(bb = c(-72, 39, -63, 46),
-                       crs = 4326){
+bb_to_bbox <- function(bb = c(xmin = 288, ymin = 39, xmax = 297, ymax = 46),
+                       #bb = c(-72, 39, -63, 46),
+                       crs = nbs_crs()){
   
   sf::st_bbox(c(xmin = bb[1], xmax = bb[3], ymin = bb[2], ymax = bb[4]),
               crs = crs)

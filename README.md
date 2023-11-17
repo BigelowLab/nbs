@@ -7,6 +7,12 @@ from [NOAA Coastwatch](https://coastwatch.noaa.gov/cwn/index.html) which
 replaces the first version called [Blended Sea
 Winds](https://www.ncei.noaa.gov/products/blended-sea-winds) online.
 
+This package provides tolls to querying, downloading and archiving
+blended sea wind raster files. Data are served on THREDDS catalog using
+OPeNDAP services. We hide all of the details and provide a simplified
+interface to download rasters (saved as GeoTIFF) and simple database
+organization.
+
 ### [Citation](https://doi.org/10.3389/fmars.2022.935549)
 
 > Saha, K.; Huai-Min, Z. Hurricane and Typhoon Storm Wind Resolving NOAA
@@ -14,21 +20,26 @@ Winds](https://www.ncei.noaa.gov/products/blended-sea-winds) online.
 > Sciences – Ocean Observation 2022, 9, 1–12.
 > <https://doi.org/10.3389/fmars.2022.935549>.
 
-### Requirements
+## Requirements
 
 From CRAN…
 
--   [R v4+](https://www.r-project.org/)
--   [rlang](https://CRAN.R-project.org/package=rlang)
--   [dplyr](https://CRAN.R-project.org/package=dplyr)
--   [tidyr](https://CRAN.R-project.org/package=tidyr)
--   [stars](https://CRAN.R-project.org/package=stars)
--   [sf](https://CRAN.R-project.org/package=sf)
--   [R6](https://CRAN.R-project.org/package=R6)
+- [R v4+](https://www.r-project.org/)
+- [rlang](https://CRAN.R-project.org/package=rlang)
+- [dplyr](https://CRAN.R-project.org/package=dplyr)
+- [tidyr](https://CRAN.R-project.org/package=tidyr)
+- [stars](https://CRAN.R-project.org/package=stars)
+- [sf](https://CRAN.R-project.org/package=sf)
+- [R6](https://CRAN.R-project.org/package=R6)
+- [thredds](https://CRAN.R-project.org/package=thredds)
+- [readr](https://CRAN.R-project.org/package=readr)
+- [rerddap](https://CRAN.R-project.org/package=rerddap)
 
-### Installation
+## Installation
 
     remotes::install_github("BigelowLab/nbs")
+
+## Usage
 
 ``` r
 suppressPackageStartupMessages({
@@ -39,166 +50,171 @@ suppressPackageStartupMessages({
 })
 ```
 
+### Set your root data path
+
+Our workflow requires a path where you will save your requested data. We
+suggest that you store your root data path in a hidden configuration
+file (defaults to `~/.nbsdata`). This is a fix-and-forget step, but you
+can override or change it later. Here is how we set up my data path.
+
+``` r
+my_data_path = "/Users/ben/Library/CloudStorage/Dropbox/data/noaa/nbs"
+ok = dir.create(my_data_path, showWarnings = FALSE, recursive = TRUE)
+nbs::set_root_path(my_data_path)
+```
+
+That’s it. When you later download data for some region, say for the
+Mediterranean, you can specify a subfolder, `med`, and store regional
+data there.
+
 #### Organization of Blended Seawinds
 
 Blended Sea Winds are organized by product and interval. The two primary
 product types are wind velocities and wind stresses. Each product type
 is organized further by aggregation interval `[6h, daily, monthly]`. In
 addition, NOAA/NCEI serves up both “near real time” (NRT) and
-science-digest versions (SCI).
+science-digest versions (SCI). These are served as “aggregate” or
+“per-file” OPeNDAP resources on the THREDDS server. We find that
+accessing the “per-file” resources is more responsive than the otherwise
+more convenient “aggregate” resources.
+
+Here we tally the the 10 resources available to us. *Caveat* - we don’t
+use the near real time (NRT) resources thus we haven’t tested them.
 
 ``` r
 nbs_tally()
 ```
 
-    ## Error in Rsx_nc4_get_vara_int: NetCDF: DAP failure
-    ## Var: time  Ndims: 1   Start: 0 Count: 13135
+    ##  [1] "Global Six-Hour UVComp" "Global Six-Hour Stress" "Global Daily UVComp"   
+    ##  [4] "Global Daily Stress"    "Global Monthly UVComp"  "Global Monthly Stress" 
+    ##  [7] "Global Six-Hour UVComp" "Global Six-Hour Stress" "Global Daily UVComp"   
+    ## [10] "Global Daily Stress"
 
-    ## Warning in FUN(X[[i]], ...): unable to open:stress_SCIDailyGlobal
+#### Query for a product
 
-    ## # A tibble: 7 × 5
-    ##   name                    vars                  time_count start      end       
-    ##   <chr>                   <chr>                      <int> <date>     <date>    
-    ## 1 uvcomp_SCISixHourGlobal u_wind, v_wind             52540 1987-07-09 1987-07-09
-    ## 2 stress_SCISixHourGlobal x_tau, y_tau               52540 -243006-0… -243006-0…
-    ## 3 uvcomp_SCIDailyGlobal   u_wind, v_wind, wind…      13135 1987-07-09 1987-07-09
-    ## 4 uvcomp_SCIMonthlyGlobal u_wind, v_wind, wind…        431 1987-07-23 1987-07-23
-    ## 5 stress_SCIMonthlyGlobal x_tau, y_tau                 431 1987-07-23 1987-07-23
-    ## 6 uvcomp_NRTSixHourGlobal u_wind, v_wind               884 2023-01-01 2023-01-01
-    ## 7 stress_NRTSixHourGlobal x_tau, y_tau                 888 -243006-0… -243006-0…
-
-#### Opening a session with a product
+Use `nbs_query()` to search for product URLs.
 
 ``` r
-X = NBS2$new(product = 'uvcomp_SCIMonthlyGlobal')
-
-times = X$get_time()
-head(times)
+uris = query_nbs(period = "monthly",
+                 dates = as.Date(c("1995-01-01", "1995-12-31")),
+                 product = "uvcomp") |>
+  dplyr::glimpse()
 ```
 
-    ## [1] "1987-07-23" "1987-08-15" "1987-09-15" "1987-10-15" "1987-11-15"
-    ## [6] "1987-12-15"
+    ## Rows: 12
+    ## Columns: 3
+    ## $ date   <date> 1995-01-01, 1995-02-01, 1995-03-01, 1995-04-01, 1995-05-01, 19…
+    ## $ dateid <chr> "199501", "199502", "199503", "199504", "199505", "199506", "19…
+    ## $ url    <chr> "https://www.star.nesdis.noaa.gov/thredds/dodsC/uvcompNCEIBlend…
+
+### Fetching data
+
+When data are fetched they are automatically stored in GeoTIFF format in
+a database-like directory structure in the path of your own choosing.
+Each GeoTIFF file contains one parameter, at one depth and one time.
+
+We’ll download just a portion of the western South Atlantic. First we
+need to make the destination path for the data, and then define the
+bounding box. Then we simply pass the table of URLs and the bounding box
+to `fetch_nbs()`. We also provide the bounding box and path.
+`param = "all"` is shorthand for fetching
+`c("u_wind", "v_wind", "windspeed")` from the `uvcomp` product.
+
+In return we’ll receive a small table (*aka* database) of the downloaded
+files.
 
 ``` r
-tail(times)
+path = nbs_path("wsa")
+ok = dir.create(path, recursive = TRUE, showWarnings = FALSE)
+bb = c(xmin = 290, ymin = -60, xmax = 360, ymax = 10)
+db = fetch_nbs(uris, param = 'all', bb = bb, path = path, verbose = TRUE)
 ```
 
-    ## [1] "2022-12-15" "2023-01-15" "2023-02-15" "2023-03-15" "2023-04-15"
-    ## [6] "2023-05-15"
+    ## opening NBSv02_wind_monthly_199501.nc 
+    ##   closing NBSv02_wind_monthly_199501.nc 
+    ## opening NBSv02_wind_monthly_199502.nc 
+    ##   closing NBSv02_wind_monthly_199502.nc 
+    ## opening NBSv02_wind_monthly_199503.nc 
+    ##   closing NBSv02_wind_monthly_199503.nc 
+    ## opening NBSv02_wind_monthly_199504.nc 
+    ##   closing NBSv02_wind_monthly_199504.nc 
+    ## opening NBSv02_wind_monthly_199505.nc 
+    ##   closing NBSv02_wind_monthly_199505.nc 
+    ## opening NBSv02_wind_monthly_199506.nc 
+    ##   closing NBSv02_wind_monthly_199506.nc 
+    ## opening NBSv02_wind_monthly_199507.nc 
+    ##   closing NBSv02_wind_monthly_199507.nc 
+    ## opening NBSv02_wind_monthly_199508.nc 
+    ##   closing NBSv02_wind_monthly_199508.nc 
+    ## opening NBSv02_wind_monthly_199509.nc 
+    ##   closing NBSv02_wind_monthly_199509.nc 
+    ## opening NBSv02_wind_monthly_199510.nc 
+    ##   closing NBSv02_wind_monthly_199510.nc 
+    ## opening NBSv02_wind_monthly_199511.nc 
+    ##   closing NBSv02_wind_monthly_199511.nc 
+    ## opening NBSv02_wind_monthly_199512.nc 
+    ##   closing NBSv02_wind_monthly_199512.nc
 
-#### Extracting with bounding boxes
+### The database
 
-The grid is a regular WGS84 `longlat` grid, but you should note that the
-longitudes range from (0, 360) and not (-180, 180).
-
-You can either manually specify a bound box in (xmin, ymin, xmax, ymax)
-order, or provide an `sf-like` object from which the bounding box is
-extracted. Below we extract 12 months (from 2020), bind as one stars
-object and display.
+The database contains identifying information about the stored files
+**except** for the path to the storage location. This adds a little
+extra work for the end user (keeping track of the data path), but that
+extra effort is offset by improved portability and ease of use.
 
 ``` r
-bb = c(290, -60, 360, 10)
-dates = seq(from = as.Date("2020-01-01"), 
-            to = as.Date("2020-12-01"), 
-            by = "month")
-windspeeds = lapply(seq_along(dates),
-                function(imonth){
-                  X$get_var(bb = bb, varid = "windspeed", 
-                            form = 'stars', time = dates[imonth])
-                }) 
-windspeed = do.call(c, append(windspeeds, list(along = list(date = dates))))
-plot(windspeed)
+db
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+    ## # A tibble: 36 × 7
+    ##    source                 date       hour  param per   nrt   time               
+    ##    <chr>                  <date>     <chr> <chr> <chr> <lgl> <dttm>             
+    ##  1 uvcomp_SCIMonthlyGlob… 1995-01-15 0000… u_wi… month FALSE 1995-01-15 00:00:00
+    ##  2 uvcomp_SCIMonthlyGlob… 1995-01-15 0000… v_wi… month FALSE 1995-01-15 00:00:00
+    ##  3 uvcomp_SCIMonthlyGlob… 1995-01-15 0000… wind… month FALSE 1995-01-15 00:00:00
+    ##  4 uvcomp_SCIMonthlyGlob… 1995-02-15 0000… u_wi… month FALSE 1995-02-15 00:00:00
+    ##  5 uvcomp_SCIMonthlyGlob… 1995-02-15 0000… v_wi… month FALSE 1995-02-15 00:00:00
+    ##  6 uvcomp_SCIMonthlyGlob… 1995-02-15 0000… wind… month FALSE 1995-02-15 00:00:00
+    ##  7 uvcomp_SCIMonthlyGlob… 1995-03-15 0000… u_wi… month FALSE 1995-03-15 00:00:00
+    ##  8 uvcomp_SCIMonthlyGlob… 1995-03-15 0000… v_wi… month FALSE 1995-03-15 00:00:00
+    ##  9 uvcomp_SCIMonthlyGlob… 1995-03-15 0000… wind… month FALSE 1995-03-15 00:00:00
+    ## 10 uvcomp_SCIMonthlyGlob… 1995-04-15 0000… u_wi… month FALSE 1995-04-15 00:00:00
+    ## # ℹ 26 more rows
 
-#### The pesky \[-180, 180\] vs \[-0, 360\] issues
-
-It seems like most mapping paradigms we see are mapped in the range
-\[-180, 180\], but certainly not all. If you have a bounding box using
-the \[-180, 180\] style, then simply convert it using the provided
-functionality. Below we show how to transform a bounding box, make the
-extraction and then ‘shift’ the result to \[-180, 180\] space.
+We provide functions, `write_database()` and `read_database()`, to
+simplify the input-output.
 
 ``` r
-bb_180 = c(-74, 39, -55, 50)
-bb_360 = bb_to360(bb_180)
-windspeed_360 = X$get_var(bb = bb_360, time = as.Date("1995-12-01"), varid = "windspeed")
-sf::st_bbox(windspeed_360)
+write_database(db, path)
 ```
 
-    ##    xmin    ymin    xmax    ymax 
-    ## 285.625  38.625 305.125  50.125
+### Reading in data
+
+We can filter the database using standard tools, and then read in the
+data as rasters.
 
 ``` r
-plot(windspeed_360, axes = TRUE)
+db2 = dplyr::filter(db, param %in% c("u_wind", "v_wind"), 
+                        date > as.Date("1995-10-01"),
+                        date <= as.Date("1995-12-31"))
+x = read_nbs(db2, path)
+x
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- --> Now we can
-shift the stars object to be in the \[-180, 180\] space.
+    ## stars object with 3 dimensions and 2 attributes
+    ## attribute(s):
+    ##               Min.   1st Qu.      Median      Mean  3rd Qu.      Max.  NA's
+    ## u_wind  -10.904867 -4.461770  0.05806307 0.1607201 4.617272 11.819275 61099
+    ## v_wind   -6.077292 -1.241886 -0.10956497 0.2898438 1.383320  8.025926 61099
+    ## dimension(s):
+    ##      from  to offset delta  refsys point
+    ## x       1 281  289.6  0.25  WGS 84 FALSE
+    ## y       1 282  10.12 -0.25  WGS 84 FALSE
+    ## time    1   3     NA    NA POSIXct    NA
+    ##                                              values x/y
+    ## x                                              NULL [x]
+    ## y                                              NULL [y]
+    ## time 1995-10-15 UTC, 1995-11-15 UTC, 1995-12-15 UTC
 
-``` r
-windspeed_180 = stars_to180(windspeed_360)
-sf::st_bbox(windspeed_180)
-```
-
-    ##    xmin    ymin    xmax    ymax 
-    ## -74.375  38.625 -54.875  50.125
-
-``` r
-plot(windspeed_180, axes = TRUE)
-```
-
-![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
-
-#### Crossing the edge
-
-How does one get a single object if the bounding box crosses the edge?
-It’s simple, really, to split the bounding box into two, extract each
-separately and then use `stars::st_mosaic()` to merge them into a single
-object.
-
-First we’ll make a bb in \[-180, 180\] space, then split it into 2 at 0
-degrees.
-
-``` r
-bb_over_edge_180 = c(-30, 10, 30, 50)
-bbs_180 = bb_split(bb_over_edge_180, at = 0)
-bbs_180
-```
-
-    ## $bb1
-    ## [1] -30  10   0  50
-    ## 
-    ## $bb2
-    ## [1]  0 10 30 50
-
-We convert each to \[0,360\].
-
-``` r
-bbs_360 = lapply(bbs_180, bb_to360)
-bbs_360
-```
-
-    ## $bb1
-    ## [1] 330  10 360  50
-    ## 
-    ## $bb2
-    ## [1]  0 10 30 50
-
-Now we collect a \[0,360\] stars object for each bb, shifting to \[-180,
-180\] as needed before mosaicing.
-
-``` r
-xx = lapply(bbs_180,
-            function(bb_180){
-              X$get_var(time = as.Date("1989-01-01"),
-                        varid = "windspeed",
-                        bb= bb_to360(bb_180)) |>
-                stars_to180()
-            })
-windspeed = stars::st_mosaic(xx[[1]], xx[[2]]) 
-plot(windspeed, axes = TRUE)
-```
-
-![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- --> }
+Note that the object has two attributes (“u_wind” and “v_wind”) and
+three layers (October, November and December).
