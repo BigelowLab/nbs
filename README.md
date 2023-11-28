@@ -127,33 +127,8 @@ files.
 path = nbs_path("wsa")
 ok = dir.create(path, recursive = TRUE, showWarnings = FALSE)
 bb = c(xmin = 290, ymin = -60, xmax = 360, ymax = 10)
-db = fetch_nbs(uris, param = 'all', bb = bb, path = path, verbose = TRUE)
+db = fetch_nbs(uris, param = 'all', bb = bb, path = path, verbose = FALSE)
 ```
-
-    ## opening NBSv02_wind_monthly_199501.nc 
-    ##   closing NBSv02_wind_monthly_199501.nc 
-    ## opening NBSv02_wind_monthly_199502.nc 
-    ##   closing NBSv02_wind_monthly_199502.nc 
-    ## opening NBSv02_wind_monthly_199503.nc 
-    ##   closing NBSv02_wind_monthly_199503.nc 
-    ## opening NBSv02_wind_monthly_199504.nc 
-    ##   closing NBSv02_wind_monthly_199504.nc 
-    ## opening NBSv02_wind_monthly_199505.nc 
-    ##   closing NBSv02_wind_monthly_199505.nc 
-    ## opening NBSv02_wind_monthly_199506.nc 
-    ##   closing NBSv02_wind_monthly_199506.nc 
-    ## opening NBSv02_wind_monthly_199507.nc 
-    ##   closing NBSv02_wind_monthly_199507.nc 
-    ## opening NBSv02_wind_monthly_199508.nc 
-    ##   closing NBSv02_wind_monthly_199508.nc 
-    ## opening NBSv02_wind_monthly_199509.nc 
-    ##   closing NBSv02_wind_monthly_199509.nc 
-    ## opening NBSv02_wind_monthly_199510.nc 
-    ##   closing NBSv02_wind_monthly_199510.nc 
-    ## opening NBSv02_wind_monthly_199511.nc 
-    ##   closing NBSv02_wind_monthly_199511.nc 
-    ## opening NBSv02_wind_monthly_199512.nc 
-    ##   closing NBSv02_wind_monthly_199512.nc
 
 ### The database
 
