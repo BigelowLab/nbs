@@ -7,7 +7,7 @@ from [NOAA Coastwatch](https://coastwatch.noaa.gov/cwn/index.html) which
 replaces the first version called [Blended Sea
 Winds](https://www.ncei.noaa.gov/products/blended-sea-winds) online.
 
-This package provides tolls to querying, downloading and archiving
+This package provides tools for querying, downloading and archiving
 blended sea wind raster files. Data are served on THREDDS catalog using
 OPeNDAP services. We hide all of the details and provide a simplified
 interface to download rasters (saved as GeoTIFF) and simple database
@@ -57,15 +57,13 @@ suggest that you store your root data path in a hidden configuration
 file (defaults to `~/.nbsdata`). This is a fix-and-forget step, but you
 can override or change it later. Here is how we set up my data path.
 
-``` r
-my_data_path = "/Users/ben/Library/CloudStorage/Dropbox/data/noaa/nbs"
-ok = dir.create(my_data_path, showWarnings = FALSE, recursive = TRUE)
-nbs::set_root_path(my_data_path)
-```
+    my_data_path = "/Users/ben/Library/CloudStorage/Dropbox/data/noaa/nbs"
+    ok = dir.create(my_data_path, showWarnings = FALSE, recursive = TRUE)
+    nbs::set_root_path(my_data_path)
 
 That’s it. When you later download data for some region, say for the
-Mediterranean, you can specify a subfolder, `med`, and store regional
-data there.
+Mediterranean, you can specify a subfolder, perhaps something like
+`med`, and store regional data there.
 
 #### Organization of Blended Seawinds
 
@@ -120,14 +118,14 @@ to `fetch_nbs()`. We also provide the bounding box and path.
 `param = "all"` is shorthand for fetching
 `c("u_wind", "v_wind", "windspeed")` from the `uvcomp` product.
 
-In return we’ll receive a small table (*aka* database) of the downloaded
-files.
+In return we’ll receive a small table (*aka* database) listing the
+downloaded files.
 
 ``` r
 path = nbs_path("wsa")
 ok = dir.create(path, recursive = TRUE, showWarnings = FALSE)
 bb = c(xmin = 290, ymin = -60, xmax = 360, ymax = 10)
-db = fetch_nbs(uris, param = 'all', bb = bb, path = path, verbose = FALSE)
+db = fetch_nbs(uris, params = 'all', bb = bb, path = path, verbose = FALSE)
 ```
 
 ### The database
@@ -193,3 +191,15 @@ x
 
 Note that the object has two attributes (“u_wind” and “v_wind”) and
 three layers (October, November and December).
+
+``` r
+plot(x['u_wind'])
+```
+
+![](README_files/figure-gfm/plot_u-1.png)<!-- -->
+
+``` r
+plot(x['v_wind'])
+```
+
+![](README_files/figure-gfm/plot_v-1.png)<!-- -->

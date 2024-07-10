@@ -9,7 +9,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Provides for access to [NBS 2.0](https://coastwatch.noaa.gov/cwn/products/noaa-ncei-blended-seawinds-nbs-v2.html) from [NOAA Coastwatch](https://coastwatch.noaa.gov/cwn/index.html) which replaces the first version called [Blended Sea Winds](https://www.ncei.noaa.gov/products/blended-sea-winds) online.
 
-This package provides tolls to querying, downloading and archiving blended sea wind raster files. Data are served on THREDDS catalog using OPeNDAP services.  We hide all of the details and provide a simplified interface to download rasters (saved as GeoTIFF) and simple database organization.
+This package provides tools for querying, downloading and archiving blended sea wind raster files. Data are served on THREDDS catalog using OPeNDAP services.  We hide all of the details and provide a simplified interface to download rasters (saved as GeoTIFF) and simple database organization.
 
 ### [Citation](https://doi.org/10.3389/fmars.2022.935549)
 
@@ -52,13 +52,13 @@ suppressPackageStartupMessages({
 
 Our workflow requires a path where you will save your requested data. We suggest that you store your root data path in a hidden configuration file (defaults to `~/.nbsdata`). This is a fix-and-forget step, but you can override or change it later. Here is how we set up my data path.
 
-```{r}
+```
 my_data_path = "/Users/ben/Library/CloudStorage/Dropbox/data/noaa/nbs"
 ok = dir.create(my_data_path, showWarnings = FALSE, recursive = TRUE)
 nbs::set_root_path(my_data_path)
 ```
 
-That's it. When you later download data for some region, say for the Mediterranean, you can specify a subfolder, `med`, and store regional data there.
+That's it. When you later download data for some region, say for the Mediterranean, you can specify a subfolder, perhaps something like `med`, and store regional data there.
 
 #### Organization of Blended Seawinds
 
@@ -85,13 +85,13 @@ When data are fetched they are automatically stored in GeoTIFF format in a datab
 
 We'll download just a portion of the western South Atlantic. First we need to make the destination path for the data, and then define the bounding box. Then we simply pass the table of URLs and the bounding box to `fetch_nbs()`.  We also provide the bounding box and path.  `param = "all"` is shorthand for fetching `c("u_wind", "v_wind", "windspeed")` from the `uvcomp` product.   
 
-In return we'll receive a small table (*aka* database) of the downloaded files.
+In return we'll receive a small table (*aka* database) listing the downloaded files.
 
 ```{r}
 path = nbs_path("wsa")
 ok = dir.create(path, recursive = TRUE, showWarnings = FALSE)
 bb = c(xmin = 290, ymin = -60, xmax = 360, ymax = 10)
-db = fetch_nbs(uris, param = 'all', bb = bb, path = path, verbose = FALSE)
+db = fetch_nbs(uris, params = 'all', bb = bb, path = path, verbose = FALSE)
 ```
 
 ### The database
@@ -119,3 +119,10 @@ x = read_nbs(db2, path)
 x
 ```
 Note that the object has two attributes ("u_wind" and "v_wind") and three layers (October, November and December).
+
+```{r plot_u}
+plot(x['u_wind'])
+```
+```{r plot_v}
+plot(x['v_wind'])
+```

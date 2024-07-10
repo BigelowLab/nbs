@@ -46,7 +46,7 @@ fetch_nbs = function(uri = NULL,
   if (is.null(uri)){
     uri = query_nbs(...) |> dplyr::pull()
   } else if (inherits(uri, "data.frame")){
-    uri = dplyr::pull(uri)
+    uri = dplyr::pull(uri, dplyr::all_of("url"))
   }
   
   
