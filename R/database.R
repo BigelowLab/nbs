@@ -12,7 +12,7 @@
 #' \item{nrt logical TRUE is near real-time}
 #' }
 decompose_filename <- function(x = 
-                                 c("/foo/bar/uvcomp_SCIMonthlyGlobal.u_wind.1981-09-01T000000tif",
+                                 c("/foo/bar/uvcomp_SCIMonthlyGlobal.u_wind.1981-09-01T000000.tif",
                                    "/foo/bar/uvcomp_SCIDailyGlobal.v_wind.1981-09-01T000000.tif",
                                    "/foo/bar/stress_SCIDailyGlobal.x_tau.1981-09-01T180000.tif")){
   
@@ -26,7 +26,16 @@ decompose_filename <- function(x =
                   choices[ix]
                 }) |>
     unname()
-  time = as.POSIXct(sapply(ss, '[[', 3), tz = "UTC", format = "%Y-%m-%dT%H:%M:%S")
+  
+  
+  times = sapply(ss, '[[', 3)
+  colons = grepl(":", times, fixed = TRUE)
+  formats = rep("%Y-%m-%dT%H%M%S", length(times))
+  formats[colons] = "%Y-%m-%dT%H:%M:%S"
+  time = rep(0, length(times))
+  for (i in seq_along(time)) time[i] = as.POSIXct(times[1], format = formats[1], tz = "UTC")
+  time = as.POSIXct(time, origin = as.POSIXct("1970-01-01 00:00:00"), tz = "UTC")
+  #time = as.POSIXct(sapply(ss, '[[', 3), tz = "UTC", format = "%Y-%m-%dT%H%M%S")
   dplyr::tibble(
     source = sapply(ss, '[[', 1),
     date = as.Date(time),

@@ -5,7 +5,7 @@
 \title{Given one or more filenames, decompose into a database}
 \usage{
 decompose_filename(
-  x = c("/foo/bar/uvcomp_SCIMonthlyGlobal.u_wind.1981-09-01T000000tif",
+  x = c("/foo/bar/uvcomp_SCIMonthlyGlobal.u_wind.1981-09-01T000000.tif",
     "/foo/bar/uvcomp_SCIDailyGlobal.v_wind.1981-09-01T000000.tif",
     "/foo/bar/stress_SCIDailyGlobal.x_tau.1981-09-01T180000.tif")
 )

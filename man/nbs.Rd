@@ -2,6 +2,7 @@
 % Please edit documentation in R/nbs-package.R
 \docType{package}
 \name{nbs}
+\alias{nbs-package}
 \alias{nbs}
 \title{Access NOAA NCEI Blended Seawinds (NBS v2)}
 \description{
